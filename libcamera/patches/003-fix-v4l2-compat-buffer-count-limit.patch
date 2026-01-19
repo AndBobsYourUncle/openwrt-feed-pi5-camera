@@ -1,0 +1,24 @@
+--- a/src/v4l2/v4l2_camera.cpp	2026-01-03 22:08:23.699232245 -0800
++++ b/src/v4l2/v4l2_camera.cpp	2026-01-03 22:09:00.107329813 -0800
+@@ -7,6 +7,7 @@
+ 
+ #include "v4l2_camera.h"
+ 
++#include <algorithm>
+ #include <errno.h>
+ #include <unistd.h>
+ 
+@@ -115,7 +116,12 @@
+ 	streamConfig.size.width = size.width;
+ 	streamConfig.size.height = size.height;
+ 	streamConfig.pixelFormat = pixelformat;
+-	streamConfig.bufferCount = bufferCount;
++	/*
++	 * Cap the buffer count to avoid exceeding hardware limits.
++	 * V4L2 devices typically support at most VIDEO_MAX_FRAME (32) buffers,
++	 * but some applications request far more. Use a conservative limit.
++	 */
++	streamConfig.bufferCount = std::min(bufferCount, 8U);
+ 	/* \todo memoryType (interval vs external) */
+ 
+ 	CameraConfiguration::Status validation = config_->validate();

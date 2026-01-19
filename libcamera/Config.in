@@ -1,0 +1,46 @@
+menu "Configuration"
+	depends on PACKAGE_libcamera
+
+config LIBCAMERA_V4L2
+	bool "v4l2 compatibility layer"
+	default y
+	help
+	  Enable the V4L2 compatibility layer, allowing V4L2 applications
+	  to use libcamera-supported cameras via LD_PRELOAD.
+
+config LIBCAMERA_PIPELINE_RPI_VC4
+	bool "Raspberry Pi VC4 pipeline (Pi 4)"
+	default n
+	help
+	  Pipeline for Raspberry Pi 4 devices using the VC4 ISP.
+
+config LIBCAMERA_PIPELINE_RPI_PISP
+	bool "Raspberry Pi PiSP pipeline (Pi 5)"
+	default n
+	select PACKAGE_libpisp
+	help
+	  Pipeline for Raspberry Pi 5 devices using the PiSP ISP.
+	  Requires libpisp.
+
+config LIBCAMERA_PIPELINE_SIMPLE
+	bool "Simple pipeline"
+	default n
+	help
+	  Pipeline for simple devices without ISP.
+
+config LIBCAMERA_PIPELINE_UVCVIDEO
+	bool "UVC pipeline"
+	default n
+	help
+	  Pipeline for USB Video Class (UVC) devices.
+
+config LIBCAMERA_GSTREAMER_SUPPORT
+	bool "GStreamer support"
+	depends on PACKAGE_gstreamer1-libs && PACKAGE_gst1-plugins-base
+	default n
+	help
+	  Build the libcamerasrc GStreamer plugin.
+	  Note: GStreamer libcamerasrc has known issues with IPA serialization.
+	  The v4l2-compat layer is recommended instead.
+
+endmenu
