@@ -31,6 +31,10 @@ PKG_BUILD_DEPENDS:= \
 include $(INCLUDE_DIR)/package.mk
 include $(INCLUDE_DIR)/meson.mk
 
+# Disable stripping - IPA modules require intact ELF symbol info
+# that gets corrupted by OpenWrt's strip process
+RSTRIP:=:
+
 define Package/libcamera/config
   source "$(SOURCE)/Config.in"
 endef

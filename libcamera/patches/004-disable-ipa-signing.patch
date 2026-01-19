@@ -1,0 +1,27 @@
+--- a/src/meson.build
++++ b/src/meson.build
+@@ -14,18 +14,12 @@
+          'LIBCAMERA_SYSCONF_DIR' : config_h.get('LIBCAMERA_SYSCONF_DIR'),
+          }, section : 'Paths')
+
+-# Module Signing
+-openssl = find_program('openssl', required : false)
+-if openssl.found()
+-    ipa_priv_key = custom_target('ipa-priv-key',
+-                                 output : ['ipa-priv-key.pem'],
+-                                 command : [gen_ipa_priv_key, '@OUTPUT@'])
+-    config_h.set('HAVE_IPA_PUBKEY', 1)
+-    ipa_sign_module = true
+-else
+-    warning('openssl not found, all IPA modules will be isolated')
+-    ipa_sign_module = false
+-endif
++# Module Signing disabled for cross-compilation.
++# Signed modules get invalidated when stripped and are complex to handle
++# in cross-compilation environments. IPAs will run in isolated mode.
++warning('IPA module signing disabled for cross-compilation')
++ipa_sign_module = false
++
+
+ # libyuv, used by the Android adaptation layer and the virtual pipeline handler.
+ # Fallback to a subproject if libyuv isn't found, as it's typically not provided
