@@ -1,6 +1,6 @@
 # OpenWrt Pi 5 Camera Feed
 
-OpenWrt package feed for Raspberry Pi 5 camera support using libcamera and libpisp.
+OpenWrt package feed for Raspberry Pi 5 camera support using libcamera, libpisp, and H.264 encoding.
 
 ## Packages
 
@@ -13,6 +13,10 @@ Linux camera framework with Raspberry Pi support. Includes:
 - **rpi/vc4** pipeline for Pi 4
 - **v4l2-compat** layer for using libcamera with V4L2 applications
 - Patches for musl libc compatibility
+
+### libx264
+H.264/AVC video encoder library. Required for software H.264 encoding since Pi 5 lacks hardware encoding.
+- Fixes upstream hash mismatch issue in OpenWrt packages feed
 
 ## Usage
 
@@ -88,3 +92,4 @@ Note: Pi 5 does not have hardware H.264 encoding, so software encoding (libx264)
 
 - libpisp: BSD-2-Clause
 - libcamera: LGPL-2.1+ / GPL-2.0+ / BSD-2-Clause / MIT
+- libx264: GPL-2.0+ (requires BUILD_PATENTED=y)
