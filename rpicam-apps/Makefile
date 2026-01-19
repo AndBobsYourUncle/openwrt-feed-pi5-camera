@@ -40,6 +40,7 @@ define Package/rpicam-apps/description
 endef
 
 # Minimal headless build - disable GUI features
+# Note: enable_imx500 is boolean (true/false), others are features (enabled/disabled)
 MESON_ARGS += \
 	-Denable_libav=disabled \
 	-Denable_drm=disabled \
@@ -48,7 +49,7 @@ MESON_ARGS += \
 	-Denable_opencv=disabled \
 	-Denable_tflite=disabled \
 	-Denable_hailo=disabled \
-	-Denable_imx500=disabled
+	-Denable_imx500=false
 
 define Package/rpicam-apps/install
 	$(INSTALL_DIR) $(1)/usr/bin
