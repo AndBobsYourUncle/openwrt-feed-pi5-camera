@@ -60,6 +60,8 @@ define Package/rpicam-apps/install
 	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/rpicam-still $(1)/usr/bin/
 	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/rpicam-hello $(1)/usr/bin/
 	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/rpicam-raw $(1)/usr/bin/
+	$(INSTALL_DIR) $(1)/usr/lib
+	$(CP) $(PKG_INSTALL_DIR)/usr/lib/librpicam_app.so* $(1)/usr/lib/
 endef
 
 $(eval $(call BuildPackage,rpicam-apps))
