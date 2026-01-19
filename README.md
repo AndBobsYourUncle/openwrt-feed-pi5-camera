@@ -18,6 +18,15 @@ Linux camera framework with Raspberry Pi support. Includes:
 H.264/AVC video encoder library. Required for software H.264 encoding since Pi 5 lacks hardware encoding.
 - Fixes upstream hash mismatch issue in OpenWrt packages feed
 
+### rpicam-apps
+Raspberry Pi camera applications using libcamera directly. Includes:
+- **rpicam-vid** - Video capture (can output raw YUV to stdout for piping to ffmpeg)
+- **rpicam-still** - Still image capture
+- **rpicam-hello** - Camera preview/test
+- **rpicam-raw** - Raw Bayer capture
+
+This is the recommended way to capture video, as it uses libcamera's native API rather than the v4l2-compat shim.
+
 ## Usage
 
 ### 1. Add the feed
@@ -45,6 +54,9 @@ Navigate to **Multimedia → libcamera** and enable:
 - `Raspberry Pi PiSP pipeline (Pi 5)` (Y)
 - `v4l2 compatibility layer` (Y)
 
+Navigate to **Multimedia → rpicam-apps** and enable:
+- `rpicam-apps` (Y)
+
 The `libpisp` package will be automatically selected as a dependency.
 
 ### 4. Kernel requirements
@@ -68,14 +80,45 @@ CONFIG_DEVTMPFS_MOUNT=y
 make -j$(nproc)
 ```
 
-## Streaming with v4l2-compat
+## Streaming with rpicam-apps (Recommended)
 
-Once installed, use the v4l2 compatibility layer with FFmpeg:
+Use rpicam-vid to capture video and pipe to ffmpeg for encoding:
+
+```bash
+rpicam-vid -t 0 --codec yuv420 --width 1920 --height 1080 --framerate 30 -o - | \
+  ffmpeg -f rawvideo -pix_fmt yuv420p -s 1920x1080 -r 30 -i - \
+  -c:v libx264 -preset ultrafast -tune zerolatency -g 30 \
+  -f rtsp rtsp://localhost:8554/camera
+```
+
+For RTSP streaming, use [mediamtx](https://github.com/bluenviron/mediamtx):
+
+```bash
+# Download and run mediamtx
+wget https://github.com/bluenviron/mediamtx/releases/download/v1.15.6/mediamtx_v1.15.6_linux_arm64.tar.gz -O mediamtx.tar.gz
+tar xzf mediamtx.tar.gz
+./mediamtx &
+
+# Start the camera stream
+rpicam-vid -t 0 --codec yuv420 --width 1920 --height 1080 --framerate 30 -o - | \
+  ffmpeg -f rawvideo -pix_fmt yuv420p -s 1920x1080 -r 30 -i - \
+  -c:v libx264 -preset ultrafast -tune zerolatency -g 30 \
+  -f rtsp rtsp://localhost:8554/camera
+```
+
+View the stream from another device:
+```bash
+ffplay rtsp://<pi-ip>:8554/camera
+```
+
+## Alternative: Streaming with v4l2-compat
+
+The v4l2-compat layer can also be used, but may have buffer issues:
 
 ```bash
 LD_PRELOAD=/usr/libexec/libcamera/v4l2-compat.so \
   ffmpeg -f v4l2 -video_size 1920x1080 -framerate 30 -i /dev/video0 \
-  -c:v libx264 -preset ultrafast -tune zerolatency \
+  -c:v libx264 -preset ultrafast -tune zerolatency -g 30 \
   -f rtsp rtsp://localhost:8554/camera
 ```
 
@@ -93,3 +136,4 @@ Note: Pi 5 does not have hardware H.264 encoding, so software encoding (libx264)
 - libpisp: BSD-2-Clause
 - libcamera: LGPL-2.1+ / GPL-2.0+ / BSD-2-Clause / MIT
 - libx264: GPL-2.0+ (requires BUILD_PATENTED=y)
+- rpicam-apps: BSD-2-Clause
