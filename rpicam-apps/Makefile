@@ -25,7 +25,7 @@ include $(INCLUDE_DIR)/meson.mk
 define Package/rpicam-apps
 	SECTION:=multimedia
 	CATEGORY:=Multimedia
-	DEPENDS:=+libcamera +boost +boost-program_options +libjpeg +libpng +libexif +libstdcpp
+	DEPENDS:=+libcamera +boost +boost-program_options +libjpeg +libpng +libexif +libstdcpp +libtiff
 	TITLE:=Raspberry Pi camera applications
 	URL:=https://github.com/raspberrypi/rpicam-apps
 endef
