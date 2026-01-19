@@ -39,6 +39,9 @@ define Package/rpicam-apps/description
 	raw video to ffmpeg for encoding.
 endef
 
+# Workaround for -Werror and musl compatibility issues
+TARGET_CXXFLAGS += -Wno-error -Wno-overflow -Wno-pedantic
+
 # Minimal headless build - disable GUI features
 # Note: enable_imx500 is boolean (true/false), others are features (enabled/disabled)
 MESON_ARGS += \
