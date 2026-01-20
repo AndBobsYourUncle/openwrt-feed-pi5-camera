@@ -12,8 +12,9 @@ OpenWrt package feed for Raspberry Pi camera support using libcamera and rpicam-
 |---------|-------------|
 | **libcamera** | Linux camera framework with `rpi/pisp` (Pi 5) and `rpi/vc4` (Pi 4) pipelines |
 | **libpisp** | Pi 5 ISP helper library (auto-selected when using pisp pipeline) |
-| **rpicam-apps** | Native camera apps + `camera-stream` service for automatic RTSP streaming |
+| **rpicam-apps** | Native camera apps: `rpicam-vid`, `rpicam-still`, `rpicam-hello`, `rpicam-raw` |
 | **mediamtx** | RTSP server with authentication (auto-starts on boot) |
+| **camera-stream** | Automatic RTSP streaming service (depends on rpicam-apps + mediamtx + ffmpeg) |
 
 ---
 
@@ -54,6 +55,7 @@ In `make menuconfig`, enable:
   - `Raspberry Pi PiSP pipeline (Pi 5)` (Y)
 - `rpicam-apps` (Y)
 - `mediamtx` (Y)
+- `camera-stream` (Y) - optional, for automatic RTSP streaming on boot
 
 **Global Build Settings:**
 - `Compile with support for patented functionality` (Y) - required for libx264

@@ -62,9 +62,6 @@ define Package/rpicam-apps/install
 	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/rpicam-raw $(1)/usr/bin/
 	$(INSTALL_DIR) $(1)/usr/lib
 	$(CP) $(PKG_INSTALL_DIR)/usr/lib/librpicam_app.so* $(1)/usr/lib/
-	$(INSTALL_BIN) ./files/camera-stream.sh $(1)/usr/bin/
-	$(INSTALL_DIR) $(1)/etc/init.d
-	$(INSTALL_BIN) ./files/camera-stream.init $(1)/etc/init.d/camera-stream
 endef
 
 $(eval $(call BuildPackage,rpicam-apps))
