@@ -7,7 +7,7 @@ PKG_NAME:=mediamtx
 PKG_VERSION:=1.15.6
 PKG_RELEASE:=1
 
-PKG_SOURCE:=mediamtx_v$(PKG_VERSION)_linux_arm64v8.tar.gz
+PKG_SOURCE:=mediamtx_v$(PKG_VERSION)_linux_arm64.tar.gz
 PKG_SOURCE_URL:=https://github.com/bluenviron/mediamtx/releases/download/v$(PKG_VERSION)/
 PKG_HASH:=skip
 
