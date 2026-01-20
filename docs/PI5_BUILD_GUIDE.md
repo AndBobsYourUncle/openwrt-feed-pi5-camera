@@ -510,16 +510,66 @@ Without these fixes, you'll see: `ERROR IPAModule: IPA module has no valid info`
 
 ## RTSP Streaming with mediamtx
 
-mediamtx is pre-installed and auto-starts on boot. Manage it with:
+### Services
+
+Two services handle streaming:
+
+1. **mediamtx** - RTSP server (auto-starts on boot)
+2. **camera-stream** - Streams camera to mediamtx (must be enabled)
+
 ```bash
+# mediamtx is auto-enabled
 /etc/init.d/mediamtx start|stop|restart|enable|disable
+
+# camera-stream must be enabled after first boot
+/etc/init.d/camera-stream enable
+/etc/init.d/camera-stream start
 ```
 
 Config file: `/etc/mediamtx/mediamtx.yml`
 
-### Stream camera to RTSP (Recommended: rpicam-apps)
+### Authentication
 
-Use `rpicam-vid` for reliable video capture via libcamera's native API:
+The stream is protected by username/password authentication.
+
+**Default credentials:**
+- Username: `viewer`
+- Password: `changeme`
+
+**Change the password** by editing `/etc/mediamtx/mediamtx.yml`:
+
+```yaml
+authInternalUsers:
+  # ... localhost config ...
+
+  - user: viewer
+    pass: your-new-password    # Change this!
+    ips: []
+    permissions:
+      - action: read
+        path: camera
+```
+
+Then restart: `/etc/init.d/mediamtx restart`
+
+### View stream
+
+On another device:
+```bash
+# ffplay works best (recommended)
+ffplay -rtsp_transport tcp rtsp://viewer:changeme@<pi5-ip>:8554/camera
+
+# VLC on Mac/Linux - MUST disable caching or you'll see blocky artifacts
+vlc --network-caching=0 rtsp://viewer:changeme@<pi5-ip>:8554/camera
+```
+
+> **Note:** Pi 5 does not have hardware H.264 encoding. Software encoding via libx264 is used instead. Ensure `BUILD_PATENTED` and `libx264` are enabled in the build config.
+
+> **VLC Warning:** VLC's default network caching causes visual artifacts (blocky distortion). Always use `--network-caching=0` or use ffplay instead.
+
+### Manual streaming (alternative)
+
+If you prefer not to use the camera-stream service:
 
 ```bash
 rpicam-vid -t 0 --codec yuv420 --width 1920 --height 1080 --framerate 30 -o - | \
@@ -527,34 +577,6 @@ rpicam-vid -t 0 --codec yuv420 --width 1920 --height 1080 --framerate 30 -o - | 
   -c:v libx264 -preset ultrafast -tune zerolatency -g 30 \
   -f rtsp rtsp://localhost:8554/camera
 ```
-
-### View stream
-
-On another device:
-```bash
-# ffplay works best (recommended)
-ffplay -rtsp_transport tcp rtsp://<pi5-ip>:8554/camera
-
-# VLC on Mac/Linux - MUST disable caching or you'll see blocky artifacts
-vlc --network-caching=0 rtsp://<pi5-ip>:8554/camera
-```
-
-> **Note:** Pi 5 does not have hardware H.264 encoding. Software encoding via libx264 is used instead. Ensure `BUILD_PATENTED` and `libx264` are enabled in the build config.
-
-> **VLC Warning:** VLC's default network caching causes visual artifacts (blocky distortion). Always use `--network-caching=0` or use ffplay instead.
-
-### Alternative: v4l2-compat (Optional, not recommended)
-
-The v4l2-compat layer can also be used but may experience empty buffer errors:
-
-```bash
-LD_PRELOAD=/usr/libexec/libcamera/v4l2-compat.so \
-  ffmpeg -f v4l2 -video_size 1920x1080 -framerate 30 -i /dev/video0 \
-  -c:v libx264 -preset ultrafast -tune zerolatency -g 30 \
-  -f rtsp rtsp://localhost:8554/camera
-```
-
-If you see `Dequeued v4l2 buffer contains 0 bytes` errors, use the rpicam-apps method instead.
 
 ---
 

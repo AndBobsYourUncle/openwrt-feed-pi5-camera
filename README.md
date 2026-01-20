@@ -12,8 +12,8 @@ OpenWrt package feed for Raspberry Pi camera support using libcamera and rpicam-
 |---------|-------------|
 | **libcamera** | Linux camera framework with `rpi/pisp` (Pi 5) and `rpi/vc4` (Pi 4) pipelines |
 | **libpisp** | Pi 5 ISP helper library (auto-selected when using pisp pipeline) |
-| **rpicam-apps** | Native camera apps: `rpicam-vid`, `rpicam-still`, `rpicam-hello`, `rpicam-raw` |
-| **mediamtx** | RTSP/RTMP/HLS/WebRTC server (auto-starts on boot) |
+| **rpicam-apps** | Native camera apps + `camera-stream` service for automatic RTSP streaming |
+| **mediamtx** | RTSP server with authentication (auto-starts on boot) |
 
 ---
 
@@ -117,29 +117,32 @@ dtoverlay=imx708,cam0
 
 For Camera v2, use `dtoverlay=imx219,cam0` instead.
 
-### 8. Build
+### 8. Build and flash
 
 ```bash
 make -j$(nproc)
 ```
 
-### 9. Flash and stream
+Flash the image to your SD card.
 
-After flashing, start an RTSP stream:
+### 9. Enable camera stream service
+
+After boot, enable the camera stream service:
 
 ```bash
-rpicam-vid -t 0 --codec yuv420 --width 1920 --height 1080 --framerate 30 -o - | \
-  ffmpeg -f rawvideo -pix_fmt yuv420p -s 1920x1080 -r 30 -i - \
-  -c:v libx264 -preset ultrafast -tune zerolatency -g 30 \
-  -f rtsp rtsp://localhost:8554/camera
+/etc/init.d/camera-stream enable
+/etc/init.d/camera-stream start
 ```
 
-View on another device:
+The stream will now start automatically on every boot.
+
+### 10. View the stream
+
 ```bash
-ffplay -rtsp_transport tcp rtsp://<pi-ip>:8554/camera
+ffplay -rtsp_transport tcp rtsp://viewer:changeme@<pi-ip>:8554/camera
 ```
 
-> **Note:** Pi 5 lacks hardware H.264 encoding - software encoding (libx264) is required.
+> **Important:** Change the default password (see Authentication section below).
 
 ---
 
@@ -185,14 +188,66 @@ CONFIG_VIDEO_IMX219=y          # Camera v2
 CONFIG_VIDEO_DW9807_VCM=y      # Autofocus
 ```
 
-### 3. Streaming (with hardware encoding)
+### 3. Build and enable service
 
-Pi 4 has hardware H.264, so encoding is simpler:
+Same as Pi 5 - the `camera-stream` service auto-detects hardware and uses the appropriate encoder.
+
+---
+
+## Authentication
+
+The RTSP stream is protected by username/password authentication.
+
+**Default credentials:**
+- Username: `viewer`
+- Password: `changeme`
+
+**Stream URL:** `rtsp://viewer:changeme@<pi-ip>:8554/camera`
+
+### Changing the password
+
+Edit `/etc/mediamtx/mediamtx.yml` on the Pi:
+
+```yaml
+authInternalUsers:
+  # ... localhost config ...
+
+  - user: viewer
+    pass: your-new-password    # Change this!
+    ips: []
+    permissions:
+      - action: read
+        path: camera
+```
+
+Then restart mediamtx:
+```bash
+/etc/init.d/mediamtx restart
+```
+
+The config file survives sysupgrade (it's in conffiles).
+
+---
+
+## Services
+
+### camera-stream
+
+Streams camera to mediamtx RTSP server. Auto-detects Pi 4/5 and uses appropriate encoder.
 
 ```bash
-rpicam-vid -t 0 --codec h264 --width 1920 --height 1080 --framerate 30 -o - | \
-  ffmpeg -i - -c:v copy -f rtsp rtsp://localhost:8554/camera
+/etc/init.d/camera-stream start|stop|restart|enable|disable
 ```
+
+### mediamtx
+
+RTSP server (auto-starts and auto-enabled on boot).
+
+```bash
+/etc/init.d/mediamtx start|stop|restart|enable|disable
+```
+
+Config: `/etc/mediamtx/mediamtx.yml`
 
 ---
 
@@ -200,25 +255,41 @@ rpicam-vid -t 0 --codec h264 --width 1920 --height 1080 --framerate 30 -o - | \
 
 ```bash
 # ffplay (recommended)
-ffplay -rtsp_transport tcp rtsp://<pi-ip>:8554/camera
+ffplay -rtsp_transport tcp rtsp://viewer:changeme@<pi-ip>:8554/camera
 
-# VLC - MUST disable caching or you'll see blocky artifacts
-vlc --network-caching=0 rtsp://<pi-ip>:8554/camera
+# VLC command line
+vlc --network-caching=0 rtsp://viewer:changeme@<pi-ip>:8554/camera
 ```
 
-> **VLC Warning:** Default caching causes visual artifacts. Always use `--network-caching=0`.
+### VLC Desktop App
+
+1. Media → Open Network Stream
+2. Enter: `rtsp://viewer:changeme@<pi-ip>:8554/camera`
+3. Check "Show more options"
+4. Set Caching to `0` ms
+5. Click Open
+
+> **VLC Warning:** Default caching causes blocky artifacts. Always set caching to 0.
 
 ---
 
-## mediamtx Service
+## Manual Streaming (Alternative)
 
-mediamtx auto-starts on boot. Manage with:
+If you prefer not to use the camera-stream service, you can stream manually:
 
+**Pi 5 (software encoding):**
 ```bash
-/etc/init.d/mediamtx start|stop|restart|enable|disable
+rpicam-vid -t 0 --codec yuv420 --width 1920 --height 1080 --framerate 30 -o - | \
+  ffmpeg -f rawvideo -pix_fmt yuv420p -s 1920x1080 -r 30 -i - \
+  -c:v libx264 -preset ultrafast -tune zerolatency -g 30 \
+  -f rtsp rtsp://localhost:8554/camera
 ```
 
-Config: `/etc/mediamtx/mediamtx.yml`
+**Pi 4 (hardware encoding):**
+```bash
+rpicam-vid -t 0 --codec h264 --width 1920 --height 1080 --framerate 30 -o - | \
+  ffmpeg -i - -c:v copy -f rtsp rtsp://localhost:8554/camera
+```
 
 ---
 
@@ -238,6 +309,13 @@ Apply the DMA heap fix patch (see step 6 above).
 
 ### VLC shows blocky artifacts
 Use `--network-caching=0` or switch to ffplay.
+
+### Stream not starting
+Check service status:
+```bash
+/etc/init.d/camera-stream status
+logread | grep -E "(camera-stream|mediamtx|ffmpeg|rpicam)"
+```
 
 ---
 
