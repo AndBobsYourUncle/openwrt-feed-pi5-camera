@@ -1,0 +1,60 @@
+# MediaMTX configuration for Raspberry Pi camera streaming
+# Documentation: https://github.com/bluenviron/mediamtx
+
+###############################################
+# Authentication
+###############################################
+
+authMethod: internal
+
+authInternalUsers:
+  # Allow localhost to publish without credentials (for camera-stream service)
+  - user: any
+    ips:
+      - 127.0.0.1
+      - ::1
+    permissions:
+      - action: publish
+        path: camera
+
+  # Viewers need username/password
+  # CHANGE THIS PASSWORD before deploying!
+  - user: viewer
+    pass: changeme
+    ips: []
+    permissions:
+      - action: read
+        path: camera
+
+###############################################
+# RTSP server
+###############################################
+
+rtspAddress: :8554
+rtspEncryption: "no"
+rtspAuthMethods: [basic]
+
+###############################################
+# RTMP server (disabled by default)
+###############################################
+
+rtmp: no
+
+###############################################
+# HLS server (disabled by default)
+###############################################
+
+hls: no
+
+###############################################
+# WebRTC server (disabled by default)
+###############################################
+
+webrtc: no
+
+###############################################
+# Paths
+###############################################
+
+paths:
+  camera:

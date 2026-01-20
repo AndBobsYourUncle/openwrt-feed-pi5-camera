@@ -47,7 +47,7 @@ define Package/mediamtx/install
 	$(INSTALL_DIR) $(1)/usr/bin
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/mediamtx $(1)/usr/bin/
 	$(INSTALL_DIR) $(1)/etc/mediamtx
-	$(INSTALL_CONF) $(PKG_BUILD_DIR)/mediamtx.yml $(1)/etc/mediamtx/
+	$(INSTALL_CONF) ./files/mediamtx.yml $(1)/etc/mediamtx/
 	$(INSTALL_DIR) $(1)/etc/init.d
 	$(INSTALL_BIN) ./files/mediamtx.init $(1)/etc/init.d/mediamtx
 endef
