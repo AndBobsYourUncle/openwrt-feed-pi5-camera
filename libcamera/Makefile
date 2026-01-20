@@ -42,7 +42,7 @@ endef
 define Package/libcamera
 	SECTION:=multimedia
 	CATEGORY:=Multimedia
-	DEPENDS:=+libyaml +libgnutls +libstdcpp +libudev-zero +libevent2 +libevent2-pthreads +libdrm
+	DEPENDS:=+libyaml +libgnutls +libstdcpp +libudev-zero +libevent2 +libevent2-pthreads +libdrm +libtiff
 	DEPENDS+=$(if $(CONFIG_LIBCAMERA_PIPELINE_RPI_PISP),+libpisp)
 	DEPENDS+=$(if $(CONFIG_LIBCAMERA_GSTREAMER_SUPPORT),+gst1-plugins-base +gstreamer1-libs)
 	TITLE:=Linux camera framework
