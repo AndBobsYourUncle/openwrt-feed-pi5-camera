@@ -11,6 +11,8 @@ PKG_SOURCE:=mediamtx_v$(PKG_VERSION)_linux_arm64.tar.gz
 PKG_SOURCE_URL:=https://github.com/bluenviron/mediamtx/releases/download/v$(PKG_VERSION)/
 PKG_HASH:=skip
 
+PKG_BUILD_DIR:=$(BUILD_DIR)/mediamtx-$(PKG_VERSION)
+
 PKG_MAINTAINER:=Nicholas Balasus
 PKG_LICENSE:=MIT
 PKG_LICENSE_FILES:=LICENSE
@@ -30,6 +32,11 @@ define Package/mediamtx/description
 	zero-dependency real-time media server and media proxy that
 	allows to publish, read, proxy, record and playback video and
 	audio streams.
+endef
+
+define Build/Prepare
+	mkdir -p $(PKG_BUILD_DIR)
+	tar -xzf $(DL_DIR)/$(PKG_SOURCE) -C $(PKG_BUILD_DIR)
 endef
 
 define Build/Compile
